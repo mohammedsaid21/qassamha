@@ -2,12 +2,15 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import api from '../api'
 import { useAuth } from '../AuthContext'
+import { useLang, useApiError } from '../i18n'
 import Avatar from '../components/Avatar'
 import Loader from '../components/Loader'
 
 export default function GroupDetail() {
   const { id } = useParams()
   const { user } = useAuth()
+  const { t } = useLang()
+  const apiError = useApiError()
   const [group, setGroup] = useState(null)
   const [expenses, setExpenses] = useState(null)
   const [balances, setBalances] = useState(null)
@@ -57,7 +60,7 @@ export default function GroupDetail() {
       setGroup(data)
       setEditing(false)
     } catch (err) {
-      setError(err.response?.data?.error || 'ما قدرنا نغيّر الاسم')
+      setError(apiError(err))
     }
   }
 
@@ -71,7 +74,7 @@ export default function GroupDetail() {
       setGroup({ ...group, members: [...group.members, data] })
       setInviteEmail('')
     } catch (err) {
-      setInviteError(err.response?.data?.error || 'صار خطأ')
+      setInviteError(apiError(err))
     }
   }
 
@@ -81,7 +84,7 @@ export default function GroupDetail() {
       setExpenses(expenses.filter((e) => e.id !== expenseId))
       refresh()
     } catch (err) {
-      setError(err.response?.data?.error || 'ما قدرنا نحذف')
+      setError(apiError(err))
     }
   }
 
@@ -99,7 +102,7 @@ export default function GroupDetail() {
       setForm({ ...form, description: '', amount: '' })
       refresh()
     } catch (err) {
-      setError(err.response?.data?.error || 'صار خطأ، جرب كمان مرة')
+      setError(apiError(err))
     }
   }
 
@@ -107,10 +110,10 @@ export default function GroupDetail() {
     return (
       <div>
         <Link to="/" className="text-sm text-inksoft hover:text-pen">
-          → كل الدفاتر
+          {t('backArrow')} {t('backToGroups')}
         </Link>
         <div className="mt-4">
-          <Loader label="بنجمع الحسابات..." />
+          <Loader label={t('loaderDetail')} />
         </div>
       </div>
     )
@@ -119,16 +122,16 @@ export default function GroupDetail() {
   const myMember = group.members.find((m) => m.userId === user.id)
   const isOwner = group.ownerId === user.id
   const tabs = [
-    ['expenses', 'المصاريف'],
-    ['balances', 'الأرصدة'],
-    ['settlements', 'التسوية'],
+    ['expenses', t('tabExpenses')],
+    ['balances', t('tabBalances')],
+    ['settlements', t('tabSettlements')],
   ]
   const total = expenses.reduce((sum, e) => sum + e.amount, 0)
 
   return (
     <div>
       <Link to="/" className="text-sm text-inksoft hover:text-pen">
-        → كل الدفاتر
+        {t('backArrow')} {t('backToGroups')}
       </Link>
 
       <div className="card px-5 py-4 mt-3">
@@ -141,13 +144,13 @@ export default function GroupDetail() {
                 className="input flex-1"
                 autoFocus
               />
-              <button className="btn-pen text-sm px-4 py-2">حفظ</button>
+              <button className="btn-pen text-sm px-4 py-2">{t('save')}</button>
               <button
                 type="button"
                 onClick={() => setEditing(false)}
                 className="btn-ghost text-sm px-4 py-2"
               >
-                إلغاء
+                {t('cancel')}
               </button>
             </form>
           ) : (
@@ -161,7 +164,7 @@ export default function GroupDetail() {
                     setNameVal(group.name)
                     setEditing(true)
                   }}
-                  title="تغيير اسم الدفتر"
+                  title={t('renameTitle')}
                   className="text-inksoft hover:text-pen"
                 >
                   ✎
@@ -176,7 +179,7 @@ export default function GroupDetail() {
           </div>
         </div>
         <p className="text-xs text-inksoft mt-1.5 num">
-          {group.members.length} أعضاء · الإجمالي {Math.round(total)} ₪
+          {t('metaLine', { n: group.members.length, total: Math.round(total) })}
         </p>
       </div>
 
@@ -201,13 +204,13 @@ export default function GroupDetail() {
           type="email"
           value={inviteEmail}
           onChange={(e) => setInviteEmail(e.target.value)}
-          placeholder="إيميل عضو تدعوه للدفتر"
+          placeholder={t('invitePlaceholder')}
           required
           className="input flex-1"
           dir="ltr"
         />
         <button type="submit" className="btn-ghost text-sm px-4 py-2">
-          دعوة
+          {t('inviteBtn')}
         </button>
       </form>
       {inviteError && (
@@ -240,7 +243,7 @@ export default function GroupDetail() {
                 onChange={(e) =>
                   setForm({ ...form, description: e.target.value })
                 }
-                placeholder="شو دفعتم؟ (فطور، بنزين...)"
+                placeholder={t('descPlaceholder')}
                 required
                 className="input flex-1"
               />
@@ -256,7 +259,7 @@ export default function GroupDetail() {
               />
             </div>
             <div className="flex items-center gap-2 flex-wrap text-sm">
-              <span className="text-xs text-inksoft font-bold">دفع:</span>
+              <span className="text-xs text-inksoft font-bold">{t('paidBy')}</span>
               <select
                 value={form.payerId}
                 onChange={(e) => setForm({ ...form, payerId: e.target.value })}
@@ -269,7 +272,7 @@ export default function GroupDetail() {
                 ))}
               </select>
               <span className="text-xs text-inksoft font-bold mr-2">
-                على مين:
+                {t('splitBetween')}
               </span>
               {group.members.map((m) => (
                 <button
@@ -292,14 +295,14 @@ export default function GroupDetail() {
               disabled={splitWith.length === 0}
               className="btn-pen px-6 text-sm"
             >
-              أضف المصروف
+              {t('addExpenseBtn')}
             </button>
           </form>
 
           <div className="mt-5">
             {expenses.length === 0 ? (
               <div className="card p-8 text-center text-inksoft text-sm">
-                الدفتر لسا فاضي — أول واحد دفع؟ سجّلها فوق
+                {t('expensesEmpty')}
               </div>
             ) : (
               <div className="card px-5 py-1">
@@ -317,7 +320,7 @@ export default function GroupDetail() {
                       </p>
                       <span className="flex-1 border-b border-dotted border-ink/20 -translate-y-1" />
                       <span className="text-xs text-inksoft whitespace-nowrap hidden sm:inline">
-                        على {expense.splits.length}
+                        {t('splitCount', { n: expense.splits.length })}
                       </span>
                       <span className="num font-bold whitespace-nowrap">
                         {expense.amount} ₪
@@ -326,7 +329,7 @@ export default function GroupDetail() {
                         <button
                           onClick={() => deleteExpense(expense.id)}
                           className="text-inksoft/40 hover:text-debt text-lg leading-none"
-                          title="حذف"
+                          title={t('delete')}
                         >
                           ×
                         </button>
@@ -336,7 +339,7 @@ export default function GroupDetail() {
                 })}
                 <div className="flex items-center gap-2 py-3">
                   <span className="text-xs font-bold text-inksoft">
-                    الإجمالي
+                    {t('total')}
                   </span>
                   <span className="flex-1 border-b border-dotted border-ink/20 -translate-y-1" />
                   <span className="num font-bold">{Math.round(total)} ₪</span>
@@ -350,10 +353,10 @@ export default function GroupDetail() {
       {tab === 'balances' && (
         <div className="card mt-5 overflow-hidden">
           <div className="grid grid-cols-[1fr_4rem_4rem_6rem] gap-x-3 px-5 py-2.5 bg-penwash text-xs font-bold text-pen">
-            <span>العضو</span>
-            <span className="text-center">دفع</span>
-            <span className="text-center">عليه</span>
-            <span className="text-center">الصافي</span>
+            <span>{t('thMember')}</span>
+            <span className="text-center">{t('thPaid')}</span>
+            <span className="text-center">{t('thOwed')}</span>
+            <span className="text-center">{t('thNet')}</span>
           </div>
           {balances.map((b) => (
             <div
@@ -372,15 +375,16 @@ export default function GroupDetail() {
               </span>
               <span className="text-center">
                 {b.net === 0 ? (
-                  <span className="text-xs text-inksoft">متساوي</span>
+                  <span className="text-xs text-inksoft">{t('even')}</span>
                 ) : (
                   <span
                     className={`num text-sm font-bold ${
                       b.net > 0 ? 'text-credit' : 'text-debt'
                     }`}
                   >
-                    {b.net > 0 ? 'له ' : 'عليه '}
-                    {Math.abs(b.net)} ₪
+                    {b.net > 0
+                      ? t('gets', { n: Math.abs(b.net) })
+                      : t('owes', { n: Math.abs(b.net) })}
                   </span>
                 )}
               </span>
@@ -394,29 +398,27 @@ export default function GroupDetail() {
           {settlements.length === 0 ? (
             <div className="card p-10 text-center">
               <p className="font-display font-bold text-lg">
-                كل الحسابات متساوية
+                {t('settledTitle')}
               </p>
-              <p className="text-sm text-inksoft mt-1">
-                ما حد عليه شي — قسّمها صح من أول مرة
-              </p>
+              <p className="text-sm text-inksoft mt-1">{t('settledSub')}</p>
             </div>
           ) : (
             <>
               <p className="text-sm text-inksoft">
-                أقل عدد تحويلات ممكن — {settlements.length} تحويل وخلص:
+                {t('settlementsIntro', { n: settlements.length })}
               </p>
-              {settlements.map((t, i) => (
+              {settlements.map((t2, i) => (
                 <div key={i} className="card p-4 flex items-center gap-3">
-                  <Avatar name={t.fromName} />
+                  <Avatar name={t2.fromName} />
                   <div className="flex-1 min-w-0 text-sm">
-                    <span className="font-bold text-debt">{t.fromName}</span>
-                    <span className="text-inksoft"> يدفع لـ </span>
-                    <span className="font-bold">{t.toName}</span>
+                    <span className="font-bold text-debt">{t2.fromName}</span>
+                    <span className="text-inksoft"> {t('paysLabel')} </span>
+                    <span className="font-bold">{t2.toName}</span>
                   </div>
                   <span className="num font-bold bg-penwash text-pen rounded-full px-4 py-1.5">
-                    {t.amount} ₪
+                    {t2.amount} ₪
                   </span>
-                  <Avatar name={t.toName} />
+                  <Avatar name={t2.toName} />
                 </div>
               ))}
             </>

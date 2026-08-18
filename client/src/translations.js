@@ -64,8 +64,7 @@ export const dict = {
     settledSub: 'ما حد عليه شي — قسّمها صح من أول مرة',
     settlementsIntro: 'أقل عدد تحويلات ممكن — {n} تحويل وخلص:',
     paysLabel: 'يدفع لـ',
-    errorRename: 'ما قدرنا نغيّر الاسم',
-    errorDelete: 'ما قدرنا نحذف',
+    delete: 'حذف',
   },
   en: {
     brand: 'Qassamha',
@@ -132,7 +131,6 @@ export const dict = {
     settledSub: 'Nobody owes anything — split right from the start',
     settlementsIntro: 'Fewest transfers possible — just {n}:',
     paysLabel: 'pays',
-    errorRename: "Couldn't rename the notebook",
-    errorDelete: "Couldn't delete",
+    delete: 'Delete',
   },
 }
