@@ -37,12 +37,38 @@ export function useLang() {
   return useContext(LangContext)
 }
 
-// server errors come back in arabic, so in english mode fall back to a generic message
+// the api returns fixed english messages, map them so both languages read naturally
+const serverErrors = {
+  'name, email and password are required': 'errFieldsRequired',
+  'password must be at least 6 characters': 'errShortPassword',
+  'this email is already registered': 'errEmailTaken',
+  'wrong email or password': 'errWrongLogin',
+  'user not found': 'errWrongLogin',
+  'invalid token': 'errWrongLogin',
+  'group not found': 'errNotFound',
+  'expense not found': 'errNotFound',
+  'member not found': 'errNotFound',
+  'you are not a member of this group': 'errNotMember',
+  'payer is not a member of this group': 'errNotMember',
+  'split members must belong to the group': 'errNotMember',
+  'group name is required': 'errGroupNameRequired',
+  'only the owner can rename the group': 'errOnlyOwnerRename',
+  'description is required': 'errDescriptionRequired',
+  'amount must be a positive number': 'errAmountPositive',
+  'only the payer or the owner can delete an expense': 'errOnlyOwnerDelete',
+  'member email is required': 'errMemberEmailRequired',
+  'no user with this email': 'errNoUser',
+  'already a member': 'errAlreadyMember',
+  'cannot remove the group owner': 'errCannotRemoveOwner',
+  'only the owner can remove members': 'errOnlyOwnerRemove',
+  'this member has expenses and cannot be removed': 'errMemberHasExpenses',
+}
+
 export function useApiError() {
-  const { lang, t } = useLang()
+  const { t } = useLang()
   return (err) => {
     const msg = err?.response?.data?.error
-    if (msg && !(lang === 'en' && /[؀-ۿ]/.test(msg))) return msg
-    return t('errorGeneric')
+    if (msg && serverErrors[msg]) return t(serverErrors[msg])
+    return msg || t('errorGeneric')
   }
 }
