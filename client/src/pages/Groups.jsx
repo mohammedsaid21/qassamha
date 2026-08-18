@@ -1,6 +1,23 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../api'
+import Avatar from '../components/Avatar'
+
+function AvatarStack({ members }) {
+  const shown = members.slice(0, 4)
+  return (
+    <div className="flex -space-x-2 rtl:space-x-reverse">
+      {shown.map((m) => (
+        <Avatar key={m.id} name={m.user.name} size="sm" />
+      ))}
+      {members.length > 4 && (
+        <span className="w-7 h-7 rounded-full bg-slate-200 text-slate-500 text-xs font-bold flex items-center justify-center">
+          +{members.length - 4}
+        </span>
+      )}
+    </div>
+  )
+}
 
 export default function Groups() {
   const [groups, setGroups] = useState(null)
@@ -25,49 +42,58 @@ export default function Groups() {
   }
 
   if (!groups) {
-    return <p className="text-center text-slate-400 py-12">جارٍ التحميل...</p>
+    return (
+      <div className="space-y-3">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="card p-4 h-16 animate-pulse" />
+        ))}
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6">
-      <form onSubmit={createGroup} className="flex gap-2">
+    <div className="space-y-5">
+      <form onSubmit={createGroup} className="card p-3 flex gap-2">
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="اسم المجموعة الجديدة"
-          className="flex-1 rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+          placeholder="اسم مجموعة جديدة... (رحلة، بيت، سفر)"
+          className="input flex-1"
         />
-        <button
-          type="submit"
-          disabled={busy}
-          className="bg-emerald-600 text-white font-bold rounded-lg px-5 hover:bg-emerald-700 disabled:opacity-50"
-        >
+        <button type="submit" disabled={busy} className="btn-primary px-6">
           إنشاء
         </button>
       </form>
 
-      <div className="space-y-3">
-        {groups.length === 0 && (
-          <p className="text-center text-slate-400 py-12">
-            ما في مجموعات لسا — أنشئ وحدة وقيّم تدعوا رفقتك
+      {groups.length === 0 ? (
+        <div className="card p-10 text-center">
+          <div className="text-4xl mb-3">👋</div>
+          <p className="font-bold">ما في مجموعات لسا</p>
+          <p className="text-sm text-slate-400 mt-1">
+            أنشئ وحدة بالفوق وقيّم تدعوا رفقتك
           </p>
-        )}
-        {groups.map((group) => (
-          <Link
-            key={group.id}
-            to={`/groups/${group.id}`}
-            className="block bg-white rounded-xl border border-slate-200 p-4 hover:border-emerald-400"
-          >
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold">{group.name}</h3>
-              <span className="text-xs text-slate-400">
-                {group.members.length} أعضاء
-              </span>
-            </div>
-          </Link>
-        ))}
-      </div>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {groups.map((group) => (
+            <Link
+              key={group.id}
+              to={`/groups/${group.id}`}
+              className="card p-4 flex items-center gap-4 hover:shadow-md hover:border-emerald-300 transition-all"
+            >
+              <div className="flex-1">
+                <h3 className="font-extrabold text-lg">{group.name}</h3>
+                <p className="text-xs text-slate-400">
+                  {group.members.length} أعضاء
+                </p>
+              </div>
+              <AvatarStack members={group.members} />
+              <span className="text-slate-300 text-xl">←</span>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
