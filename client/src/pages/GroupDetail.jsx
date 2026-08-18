@@ -60,7 +60,7 @@ export default function GroupDetail() {
       setGroup(data)
       setEditing(false)
     } catch (err) {
-      setError(apiError(err))
+      setError(err.response?.data?.error)
     }
   }
 
@@ -74,7 +74,7 @@ export default function GroupDetail() {
       setGroup({ ...group, members: [...group.members, data] })
       setInviteEmail('')
     } catch (err) {
-      setInviteError(apiError(err))
+      setInviteError(err.response?.data?.error)
     }
   }
 
@@ -84,7 +84,7 @@ export default function GroupDetail() {
       setExpenses(expenses.filter((e) => e.id !== expenseId))
       refresh()
     } catch (err) {
-      setError(apiError(err))
+      setError(err.response?.data?.error)
     }
   }
 
@@ -102,7 +102,7 @@ export default function GroupDetail() {
       setForm({ ...form, description: '', amount: '' })
       refresh()
     } catch (err) {
-      setError(apiError(err))
+      setError(err.response?.data?.error)
     }
   }
 
@@ -214,7 +214,7 @@ export default function GroupDetail() {
         </button>
       </form>
       {inviteError && (
-        <p className="text-sm text-debt mt-1">{inviteError}</p>
+        <p className="text-sm text-debt mt-1">{apiError(inviteError)}</p>
       )}
 
       <div className="flex gap-5 mt-6 border-b border-hairline">
@@ -289,7 +289,7 @@ export default function GroupDetail() {
                 </button>
               ))}
             </div>
-            {error && <p className="text-sm text-debt">{error}</p>}
+            {error && <p className="text-sm text-debt">{apiError(error)}</p>}
             <button
               type="submit"
               disabled={splitWith.length === 0}

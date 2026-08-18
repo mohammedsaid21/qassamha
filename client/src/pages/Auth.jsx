@@ -27,7 +27,7 @@ export default function Auth() {
       login(data.token, data.user)
       navigate('/')
     } catch (err) {
-      setError(apiError(err))
+      setError(err.response?.data?.error)
     } finally {
       setBusy(false)
     }
@@ -89,7 +89,7 @@ export default function Auth() {
 
           {error && (
             <p className="text-sm text-debt bg-debtwash rounded-lg px-3 py-2">
-              {error}
+              {apiError(error)}
             </p>
           )}
 

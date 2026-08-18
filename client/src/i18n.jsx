@@ -64,11 +64,11 @@ const serverErrors = {
   'this member has expenses and cannot be removed': 'errMemberHasExpenses',
 }
 
+// takes the raw api error string, call it at render time so it follows the active language
 export function useApiError() {
   const { t } = useLang()
-  return (err) => {
-    const msg = err?.response?.data?.error
-    if (msg && serverErrors[msg]) return t(serverErrors[msg])
-    return msg || t('errorGeneric')
+  return (msg) => {
+    if (!msg) return t('errorGeneric')
+    return serverErrors[msg] ? t(serverErrors[msg]) : msg
   }
 }
