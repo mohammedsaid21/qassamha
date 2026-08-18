@@ -5,12 +5,14 @@ import api from '../api'
 export default function GroupDetail() {
   const { id } = useParams()
   const [group, setGroup] = useState(null)
+  const [expenses, setExpenses] = useState(null)
 
   useEffect(() => {
     api.get(`/groups/${id}`).then((res) => setGroup(res.data))
+    api.get(`/groups/${id}/expenses`).then((res) => setExpenses(res.data))
   }, [id])
 
-  if (!group) {
+  if (!group || !expenses) {
     return <p className="text-center text-slate-400 py-12">جارٍ التحميل...</p>
   }
 
@@ -29,6 +31,29 @@ export default function GroupDetail() {
             {member.user.name}
             {member.userId === group.ownerId && ' 👑'}
           </span>
+        ))}
+      </div>
+
+      <h3 className="font-bold mt-8 mb-3">المصاريف</h3>
+      <div className="space-y-2">
+        {expenses.length === 0 && (
+          <p className="text-slate-400 text-sm">ما في مصاريف لسا</p>
+        )}
+        {expenses.map((expense) => (
+          <div
+            key={expense.id}
+            className="bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-between"
+          >
+            <div>
+              <p className="font-semibold">{expense.description}</p>
+              <p className="text-xs text-slate-400">
+                دفع {expense.payer.user.name} · على {expense.splits.length} أشخاص
+              </p>
+            </div>
+            <span className="font-extrabold text-emerald-700">
+              {expense.amount} ₪
+            </span>
+          </div>
         ))}
       </div>
     </div>
