@@ -55,6 +55,17 @@ export default function GroupDetail() {
     }
   }
 
+  async function deleteExpense(expenseId) {
+    try {
+      await api.delete(`/groups/${id}/expenses/${expenseId}`)
+      setExpenses(expenses.filter((e) => e.id !== expenseId))
+      api.get(`/groups/${id}/balances`).then((res) => setBalances(res.data))
+      api.get(`/groups/${id}/settlements`).then((res) => setSettlements(res.data))
+    } catch (err) {
+      setError(err.response?.data?.error || 'ما قدرنا نحذف')
+    }
+  }
+
   async function addExpense(e) {
     e.preventDefault()
     setError('')
@@ -208,22 +219,38 @@ export default function GroupDetail() {
         {expenses.length === 0 && (
           <p className="text-slate-400 text-sm">ما في مصاريف لسا</p>
         )}
-        {expenses.map((expense) => (
-          <div
-            key={expense.id}
-            className="bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-between"
-          >
-            <div>
-              <p className="font-semibold">{expense.description}</p>
-              <p className="text-xs text-slate-400">
-                دفع {expense.payer.user.name} · على {expense.splits.length} أشخاص
-              </p>
+        {expenses.map((expense) => {
+          const mine =
+            expense.payerId === group.members.find((m) => m.userId === user.id)?.id
+          const canDelete = mine || group.ownerId === user.id
+          return (
+            <div
+              key={expense.id}
+              className="bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-between"
+            >
+              <div>
+                <p className="font-semibold">{expense.description}</p>
+                <p className="text-xs text-slate-400">
+                  دفع {expense.payer.user.name} · على {expense.splits.length} أشخاص
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="font-extrabold text-emerald-700">
+                  {expense.amount} ₪
+                </span>
+                {canDelete && (
+                  <button
+                    onClick={() => deleteExpense(expense.id)}
+                    className="text-slate-300 hover:text-rose-600 text-lg leading-none"
+                    title="حذف"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
             </div>
-            <span className="font-extrabold text-emerald-700">
-              {expense.amount} ₪
-            </span>
-          </div>
-        ))}
+          )
+        })}
       </div>
         </>
       )}
