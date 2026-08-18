@@ -31,6 +31,10 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+button:not(:disabled) {
+  cursor: pointer;
+}
+
 @layer components {
   .card {
     @apply bg-white rounded-xl border border-hairline shadow-[0_1px_2px_rgba(28,43,38,0.05)];
