@@ -31,62 +31,79 @@ export default function Auth() {
   }
 
   return (
-    <div className="max-w-sm mx-auto bg-white rounded-2xl border border-slate-200 p-6">
-      <h2 className="text-xl font-bold mb-4">
-        {mode === 'login' ? 'تسجيل الدخول' : 'حساب جديد'}
-      </h2>
+    <div className="max-w-sm mx-auto card p-7 mt-4">
+      <div className="text-center mb-6">
+        <div className="text-4xl mb-2">✂️</div>
+        <h2 className="text-xl font-extrabold">
+          {mode === 'login' ? 'أهلاً برجوعك' : 'خلينا نتعرف'}
+        </h2>
+        <p className="text-sm text-slate-400 mt-1">
+          {mode === 'login'
+            ? 'سجل دخول تشوف مجموعاتك'
+            : 'حساب جديد وبتتقلع بمجموعتك الأولى'}
+        </p>
+      </div>
+
       <form onSubmit={submit} className="space-y-4">
         {mode === 'register' && (
           <div>
-            <label className="block text-sm font-semibold mb-1">الاسم</label>
+            <label className="block text-sm font-bold mb-1.5">الاسم</label>
             <input
               type="text"
               name="name"
               value={form.name}
               onChange={change}
               required
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              className="input w-full"
+              placeholder="شنو بنناديك؟"
             />
           </div>
         )}
         <div>
-          <label className="block text-sm font-semibold mb-1">الإيميل</label>
+          <label className="block text-sm font-bold mb-1.5">الإيميل</label>
           <input
             type="email"
             name="email"
             value={form.email}
             onChange={change}
             required
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            className="input w-full"
+            placeholder="you@example.com"
+            dir="ltr"
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold mb-1">كلمة السر</label>
+          <label className="block text-sm font-bold mb-1.5">كلمة السر</label>
           <input
             type="password"
             name="password"
             value={form.password}
             onChange={change}
             required
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            className="input w-full"
+            placeholder="6 أحرف على الأقل"
+            dir="ltr"
           />
         </div>
-        {error && <p className="text-sm text-rose-600">{error}</p>}
-        <button
-          type="submit"
-          disabled={busy}
-          className="w-full bg-emerald-600 text-white font-bold rounded-lg py-2.5 hover:bg-emerald-700 disabled:opacity-50"
-        >
+
+        {error && (
+          <p className="text-sm text-rose-600 bg-rose-50 rounded-lg px-3 py-2">
+            {error}
+          </p>
+        )}
+
+        <button type="submit" disabled={busy} className="btn-primary w-full">
           {busy ? 'لحظة...' : mode === 'login' ? 'دخول' : 'أنشئ الحساب'}
         </button>
       </form>
+
       <button
         type="button"
         onClick={() => {
           setMode(mode === 'login' ? 'register' : 'login')
           setError('')
         }}
-        className="w-full mt-4 text-sm text-emerald-700 hover:underline"
+        className="w-full mt-5 text-sm text-emerald-700 font-bold hover:underline"
       >
         {mode === 'login' ? 'ما معك حساب؟ أنشئ واحد' : 'عندك حساب؟ سجل دخول'}
       </button>
