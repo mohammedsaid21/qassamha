@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import api from '../api'
 
 export default function Groups() {
@@ -47,13 +48,24 @@ export default function Groups() {
       </form>
 
       <div className="space-y-3">
+        {groups.length === 0 && (
+          <p className="text-center text-slate-400 py-12">
+            ما في مجموعات لسا — أنشئ وحدة وقيّم تدعوا رفقتك
+          </p>
+        )}
         {groups.map((group) => (
-          <div
+          <Link
             key={group.id}
-            className="bg-white rounded-xl border border-slate-200 p-4"
+            to={`/groups/${group.id}`}
+            className="block bg-white rounded-xl border border-slate-200 p-4 hover:border-emerald-400"
           >
-            <h3 className="font-bold">{group.name}</h3>
-          </div>
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold">{group.name}</h3>
+              <span className="text-xs text-slate-400">
+                {group.members.length} أعضاء
+              </span>
+            </div>
+          </Link>
         ))}
       </div>
     </div>
