@@ -98,6 +98,7 @@ export default function GroupDetail() {
       </div>
 
       {tab === 'expenses' && (
+        <>
       <form
         onSubmit={addExpense}
         className="bg-white rounded-xl border border-slate-200 p-4 mt-6 space-y-3"
@@ -185,6 +186,7 @@ export default function GroupDetail() {
           </div>
         ))}
       </div>
+        </>
       )}
 
       {tab === 'balances' && (
