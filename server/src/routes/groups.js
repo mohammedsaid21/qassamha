@@ -50,4 +50,27 @@ router.get('/:id', async (req, res) => {
   res.json(group)
 })
 
+router.patch('/:id', async (req, res) => {
+  const { name } = req.body
+  const group = await prisma.group.findUnique({
+    where: { id: req.params.id },
+  })
+  if (!group) {
+    return res.status(404).json({ error: 'group not found' })
+  }
+  if (group.ownerId !== req.user.id) {
+    return res.status(403).json({ error: 'only the owner can rename the group' })
+  }
+  if (!name || !name.trim()) {
+    return res.status(400).json({ error: 'group name is required' })
+  }
+
+  const updated = await prisma.group.update({
+    where: { id: group.id },
+    data: { name: name.trim() },
+    include: membersInclude,
+  })
+  res.json(updated)
+})
+
 export default router
