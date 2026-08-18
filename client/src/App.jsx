@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import Auth from './pages/Auth'
 import Groups from './pages/Groups'
+import GroupDetail from './pages/GroupDetail'
 import ProtectedRoute from './ProtectedRoute'
 import { useAuth } from './AuthContext'
 
@@ -36,6 +37,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Groups />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/groups/:id"
+            element={
+              <ProtectedRoute>
+                <GroupDetail />
               </ProtectedRoute>
             }
           />
