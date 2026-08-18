@@ -9,6 +9,7 @@ export default function GroupDetail() {
   const [group, setGroup] = useState(null)
   const [expenses, setExpenses] = useState(null)
   const [balances, setBalances] = useState(null)
+  const [settlements, setSettlements] = useState(null)
   const [tab, setTab] = useState('expenses')
   const [form, setForm] = useState({ description: '', amount: '', payerId: '' })
   const [splitWith, setSplitWith] = useState(null)
@@ -18,6 +19,7 @@ export default function GroupDetail() {
     api.get(`/groups/${id}`).then((res) => setGroup(res.data))
     api.get(`/groups/${id}/expenses`).then((res) => setExpenses(res.data))
     api.get(`/groups/${id}/balances`).then((res) => setBalances(res.data))
+    api.get(`/groups/${id}/settlements`).then((res) => setSettlements(res.data))
   }, [id])
 
   useEffect(() => {
@@ -49,18 +51,21 @@ export default function GroupDetail() {
       })
       setExpenses([data, ...expenses])
       setForm({ ...form, description: '', amount: '' })
+      api.get(`/groups/${id}/balances`).then((res) => setBalances(res.data))
+      api.get(`/groups/${id}/settlements`).then((res) => setSettlements(res.data))
     } catch (err) {
       setError(err.response?.data?.error || 'صار خطأ، جرب كمان مرة')
     }
   }
 
-  if (!group || !expenses || !splitWith || !balances) {
+  if (!group || !expenses || !splitWith || !balances || !settlements) {
     return <p className="text-center text-slate-400 py-12">جارٍ التحميل...</p>
   }
 
   const tabs = [
     ['expenses', 'المصاريف'],
     ['balances', 'الأرصدة'],
+    ['settlements', 'التسوية'],
   ]
 
   return (
@@ -215,6 +220,35 @@ export default function GroupDetail() {
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {tab === 'settlements' && (
+        <div className="mt-6 space-y-3">
+          {settlements.length === 0 ? (
+            <p className="text-center text-slate-400 py-8">
+              كل الحسابات متساوية 🎉
+            </p>
+          ) : (
+            <>
+              <p className="text-sm text-slate-500">
+                أقل عدد تحويلات لتسوية كل الديون ({settlements.length} تحويل):
+              </p>
+              {settlements.map((t, i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-between"
+                >
+                  <p className="font-semibold">
+                    <span className="text-rose-600">{t.fromName}</span>
+                    <span className="text-slate-400 mx-2">يدفع لـ</span>
+                    <span className="text-emerald-600">{t.toName}</span>
+                  </p>
+                  <span className="font-extrabold">{t.amount} ₪</span>
+                </div>
+              ))}
+            </>
+          )}
         </div>
       )}
     </div>
