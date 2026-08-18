@@ -1,11 +1,12 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from './AuthContext'
+import Loader from './components/Loader'
 
 export default function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
 
   if (loading) {
-    return <p className="text-center text-slate-400 py-12">جارٍ التحميل...</p>
+    return <Loader label="بنجهّز دفترك..." />
   }
   if (!user) {
     return <Navigate to="/login" replace />

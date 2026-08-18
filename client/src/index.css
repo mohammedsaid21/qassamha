@@ -1,23 +1,72 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Cairo", system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-display: "El Messiri", "IBM Plex Sans Arabic", serif;
+
+  --color-paper: #fbfbf6;
+  --color-ink: #1c2b26;
+  --color-inksoft: #66736d;
+  --color-hairline: #dfe4dd;
+  --color-pen: #2f45b8;
+  --color-pendark: #26379a;
+  --color-penwash: #eef1fb;
+  --color-credit: #0c7a55;
+  --color-creditwash: #e9f5ef;
+  --color-debt: #c0362a;
+  --color-debtwash: #fbeeea;
 }
 
 body {
-  @apply bg-stone-100 text-slate-800;
+  background-color: var(--color-paper);
+  background-image:
+    linear-gradient(rgba(12, 122, 85, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(12, 122, 85, 0.06) 1px, transparent 1px);
+  background-size: 26px 26px;
+  color: var(--color-ink);
+}
+
+.num {
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
 }
 
 @layer components {
   .card {
-    @apply bg-white rounded-2xl border border-stone-200/80 shadow-sm;
+    @apply bg-white rounded-xl border border-hairline shadow-[0_1px_2px_rgba(28,43,38,0.05)];
   }
   .input {
-    @apply rounded-xl border border-stone-300 bg-white px-3.5 py-2.5 text-sm
-      focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400;
+    @apply rounded-lg border border-[#d4dad2] bg-white px-3 py-2 text-sm
+      placeholder:text-inksoft/60 focus:outline-none focus:border-pen
+      focus:ring-2 focus:ring-pen/20;
   }
-  .btn-primary {
-    @apply bg-emerald-600 text-white font-bold rounded-xl py-2.5 hover:bg-emerald-700
-      disabled:opacity-50 transition-colors;
+  .btn-pen {
+    @apply rounded-lg bg-pen text-white font-bold text-sm px-4 py-2.5
+      hover:bg-pendark disabled:opacity-50 transition-colors
+      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pen;
+  }
+  .btn-ghost {
+    @apply rounded-lg bg-white border border-[#d4dad2] text-inksoft font-bold text-sm
+      px-4 py-2.5 hover:border-pen hover:text-pen transition-colors
+      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pen;
+  }
+}
+
+@keyframes cut {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-150px);
+  }
+}
+
+.animate-cut {
+  animation: cut 1.6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-cut {
+    animation: none;
   }
 }
