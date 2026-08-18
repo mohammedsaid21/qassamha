@@ -7,6 +7,7 @@ import memberRoutes from './routes/members.js'
 import expenseRoutes from './routes/expenses.js'
 import balanceRoutes from './routes/balances.js'
 import settlementRoutes from './routes/settlements.js'
+import { prisma } from './db.js'
 
 dotenv.config()
 
@@ -35,6 +36,11 @@ app.use((err, req, res, next) => {
   console.error(err)
   res.status(500).json({ error: 'something went wrong' })
 })
+
+// neon free tier suspends after ~5 min idle, keep the connection warm
+setInterval(() => {
+  prisma.$queryRaw`SELECT 1`.catch(() => {})
+}, 4 * 60 * 1000)
 
 app.listen(PORT, () => {
   console.log(`server running on port ${PORT}`)
