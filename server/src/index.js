@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import authRoutes from './routes/auth.js'
+import groupRoutes from './routes/groups.js'
 
 dotenv.config()
 
@@ -16,6 +17,7 @@ app.get('/api/health', (req, res) => {
 })
 
 app.use('/api/auth', authRoutes)
+app.use('/api/groups', groupRoutes)
 
 app.use((req, res) => {
   res.status(404).json({ error: 'not found' })
