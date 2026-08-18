@@ -8,6 +8,8 @@ export default function GroupDetail() {
   const { user } = useAuth()
   const [group, setGroup] = useState(null)
   const [expenses, setExpenses] = useState(null)
+  const [balances, setBalances] = useState(null)
+  const [tab, setTab] = useState('expenses')
   const [form, setForm] = useState({ description: '', amount: '', payerId: '' })
   const [splitWith, setSplitWith] = useState(null)
   const [error, setError] = useState('')
@@ -15,6 +17,7 @@ export default function GroupDetail() {
   useEffect(() => {
     api.get(`/groups/${id}`).then((res) => setGroup(res.data))
     api.get(`/groups/${id}/expenses`).then((res) => setExpenses(res.data))
+    api.get(`/groups/${id}/balances`).then((res) => setBalances(res.data))
   }, [id])
 
   useEffect(() => {
@@ -51,9 +54,14 @@ export default function GroupDetail() {
     }
   }
 
-  if (!group || !expenses || !splitWith) {
+  if (!group || !expenses || !splitWith || !balances) {
     return <p className="text-center text-slate-400 py-12">جارٍ التحميل...</p>
   }
+
+  const tabs = [
+    ['expenses', 'المصاريف'],
+    ['balances', 'الأرصدة'],
+  ]
 
   return (
     <div>
@@ -73,6 +81,23 @@ export default function GroupDetail() {
         ))}
       </div>
 
+      <div className="flex gap-2 mt-8">
+        {tabs.map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={`rounded-full px-4 py-1.5 text-sm font-bold ${
+              tab === key
+                ? 'bg-emerald-600 text-white'
+                : 'bg-white text-slate-500 border border-slate-200'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'expenses' && (
       <form
         onSubmit={addExpense}
         className="bg-white rounded-xl border border-slate-200 p-4 mt-6 space-y-3"
@@ -160,6 +185,36 @@ export default function GroupDetail() {
           </div>
         ))}
       </div>
+      )}
+
+      {tab === 'balances' && (
+        <div className="grid gap-3 mt-6 sm:grid-cols-2">
+          {balances.map((b) => (
+            <div
+              key={b.memberId}
+              className="bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-between"
+            >
+              <div>
+                <p className="font-bold">{b.name}</p>
+                <p className="text-xs text-slate-400">
+                  دفع {b.paid} ₪ · عليه {b.owed} ₪
+                </p>
+              </div>
+              {b.net === 0 ? (
+                <span className="text-sm text-slate-400">متساوي 🎉</span>
+              ) : (
+                <span
+                  className={`font-extrabold ${
+                    b.net > 0 ? 'text-emerald-600' : 'text-rose-600'
+                  }`}
+                >
+                  {b.net > 0 ? `له ${b.net}` : `عليه ${-b.net}`} ₪
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
