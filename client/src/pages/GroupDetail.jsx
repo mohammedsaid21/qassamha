@@ -14,6 +14,8 @@ export default function GroupDetail() {
   const [form, setForm] = useState({ description: '', amount: '', payerId: '' })
   const [splitWith, setSplitWith] = useState(null)
   const [error, setError] = useState('')
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteError, setInviteError] = useState('')
 
   useEffect(() => {
     api.get(`/groups/${id}`).then((res) => setGroup(res.data))
@@ -37,6 +39,20 @@ export default function GroupDetail() {
         ? prev.filter((x) => x !== memberId)
         : [...prev, memberId],
     )
+  }
+
+  async function inviteMember(e) {
+    e.preventDefault()
+    setInviteError('')
+    try {
+      const { data } = await api.post(`/groups/${id}/members`, {
+        email: inviteEmail,
+      })
+      setGroup({ ...group, members: [...group.members, data] })
+      setInviteEmail('')
+    } catch (err) {
+      setInviteError(err.response?.data?.error || 'صار خطأ')
+    }
   }
 
   async function addExpense(e) {
@@ -85,6 +101,24 @@ export default function GroupDetail() {
           </span>
         ))}
       </div>
+
+      <form onSubmit={inviteMember} className="flex gap-2 mt-3">
+        <input
+          type="email"
+          value={inviteEmail}
+          onChange={(e) => setInviteEmail(e.target.value)}
+          placeholder="إيميل عضو تدعوه للمجموعة"
+          required
+          className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+        />
+        <button
+          type="submit"
+          className="bg-white border border-slate-300 text-slate-600 font-bold rounded-lg px-4 text-sm hover:border-emerald-400"
+        >
+          دعوة
+        </button>
+      </form>
+      {inviteError && <p className="text-sm text-rose-600 mt-1">{inviteError}</p>}
 
       <div className="flex gap-2 mt-8">
         {tabs.map(([key, label]) => (
