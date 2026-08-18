@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import Auth from './pages/Auth'
+import Groups from './pages/Groups'
 import ProtectedRoute from './ProtectedRoute'
 import { useAuth } from './AuthContext'
 
@@ -34,7 +35,7 @@ export default function App() {
             path="/"
             element={
               <ProtectedRoute>
-                <p className="text-slate-400">المجموعات قريباً...</p>
+                <Groups />
               </ProtectedRoute>
             }
           />
