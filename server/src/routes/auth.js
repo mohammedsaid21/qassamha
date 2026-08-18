@@ -2,6 +2,7 @@ import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { prisma } from '../db.js'
+import { requireAuth } from '../middleware/auth.js'
 
 const router = Router()
 
@@ -44,6 +45,10 @@ router.post('/login', async (req, res) => {
   }
 
   res.json({ token: signToken(user), user: publicUser(user) })
+})
+
+router.get('/me', requireAuth, (req, res) => {
+  res.json(publicUser(req.user))
 })
 
 export default router
