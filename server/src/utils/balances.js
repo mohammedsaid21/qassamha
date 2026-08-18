@@ -26,3 +26,44 @@ export function computeBalances(members, expenses) {
     net: round2(b.paid - b.owed),
   }))
 }
+
+// greedy min-cash-flow: match the biggest debtor with the biggest creditor
+export function settleDebts(balances) {
+  const creditors = []
+  const debtors = []
+  for (const b of balances) {
+    const cents = Math.round(b.net * 100)
+    if (cents > 0) {
+      creditors.push({ memberId: b.memberId, name: b.name, cents })
+    } else if (cents < 0) {
+      debtors.push({ memberId: b.memberId, name: b.name, cents: -cents })
+    }
+  }
+
+  creditors.sort((a, b) => b.cents - a.cents)
+  debtors.sort((a, b) => b.cents - a.cents)
+
+  const transfers = []
+  let ci = 0
+  let di = 0
+  while (ci < creditors.length && di < debtors.length) {
+    const creditor = creditors[ci]
+    const debtor = debtors[di]
+    const amount = Math.min(creditor.cents, debtor.cents)
+
+    transfers.push({
+      fromId: debtor.memberId,
+      fromName: debtor.name,
+      toId: creditor.memberId,
+      toName: creditor.name,
+      amount: amount / 100,
+    })
+
+    creditor.cents -= amount
+    debtor.cents -= amount
+    if (creditor.cents === 0) ci++
+    if (debtor.cents === 0) di++
+  }
+
+  return transfers
+}
