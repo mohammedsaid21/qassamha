@@ -4,7 +4,8 @@ import api from '../api'
 import { useAuth } from '../AuthContext'
 
 export default function Auth() {
-  const [form, setForm] = useState({ email: '', password: '' })
+  const [mode, setMode] = useState('login')
+  const [form, setForm] = useState({ name: '', email: '', password: '' })
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const { login } = useAuth()
@@ -19,7 +20,7 @@ export default function Auth() {
     setError('')
     setBusy(true)
     try {
-      const { data } = await api.post('/auth/login', form)
+      const { data } = await api.post(`/auth/${mode}`, form)
       login(data.token, data.user)
       navigate('/')
     } catch (err) {
@@ -31,8 +32,23 @@ export default function Auth() {
 
   return (
     <div className="max-w-sm mx-auto bg-white rounded-2xl border border-slate-200 p-6">
-      <h2 className="text-xl font-bold mb-4">تسجيل الدخول</h2>
+      <h2 className="text-xl font-bold mb-4">
+        {mode === 'login' ? 'تسجيل الدخول' : 'حساب جديد'}
+      </h2>
       <form onSubmit={submit} className="space-y-4">
+        {mode === 'register' && (
+          <div>
+            <label className="block text-sm font-semibold mb-1">الاسم</label>
+            <input
+              type="text"
+              name="name"
+              value={form.name}
+              onChange={change}
+              required
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            />
+          </div>
+        )}
         <div>
           <label className="block text-sm font-semibold mb-1">الإيميل</label>
           <input
@@ -61,9 +77,19 @@ export default function Auth() {
           disabled={busy}
           className="w-full bg-emerald-600 text-white font-bold rounded-lg py-2.5 hover:bg-emerald-700 disabled:opacity-50"
         >
-          {busy ? 'لحظة...' : 'دخول'}
+          {busy ? 'لحظة...' : mode === 'login' ? 'دخول' : 'أنشئ الحساب'}
         </button>
       </form>
+      <button
+        type="button"
+        onClick={() => {
+          setMode(mode === 'login' ? 'register' : 'login')
+          setError('')
+        }}
+        className="w-full mt-4 text-sm text-emerald-700 hover:underline"
+      >
+        {mode === 'login' ? 'ما معك حساب؟ أنشئ واحد' : 'عندك حساب؟ سجل دخول'}
+      </button>
     </div>
   )
 }
