@@ -3,16 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import api from '../api'
 import { useAuth } from '../AuthContext'
 import Avatar from '../components/Avatar'
-
-function Skeleton() {
-  return (
-    <div className="space-y-3">
-      {[0, 1, 2].map((i) => (
-        <div key={i} className="card p-4 h-16 animate-pulse" />
-      ))}
-    </div>
-  )
-}
+import Loader from '../components/Loader'
 
 export default function GroupDetail() {
   const { id } = useParams()
@@ -27,6 +18,8 @@ export default function GroupDetail() {
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteError, setInviteError] = useState('')
   const [tab, setTab] = useState('expenses')
+  const [editing, setEditing] = useState(false)
+  const [nameVal, setNameVal] = useState('')
 
   function refresh() {
     api.get(`/groups/${id}/expenses`).then((res) => setExpenses(res.data))
@@ -54,6 +47,18 @@ export default function GroupDetail() {
         ? prev.filter((x) => x !== memberId)
         : [...prev, memberId],
     )
+  }
+
+  async function saveName(e) {
+    e.preventDefault()
+    if (!nameVal.trim()) return
+    try {
+      const { data } = await api.patch(`/groups/${id}`, { name: nameVal })
+      setGroup(data)
+      setEditing(false)
+    } catch (err) {
+      setError(err.response?.data?.error || 'ما قدرنا نغيّر الاسم')
+    }
   }
 
   async function inviteMember(e) {
@@ -100,18 +105,19 @@ export default function GroupDetail() {
 
   if (!group || !expenses || !splitWith || !balances || !settlements) {
     return (
-    <div>
-      <Link to="/" className="text-sm text-slate-500 hover:text-emerald-600">
-        → رجوع للمجموعات
-      </Link>
-      <div className="mt-4">
-        <Skeleton />
+      <div>
+        <Link to="/" className="text-sm text-inksoft hover:text-pen">
+          → كل الدفاتر
+        </Link>
+        <div className="mt-4">
+          <Loader label="بنجمع الحسابات..." />
+        </div>
       </div>
-    </div>
     )
   }
 
   const myMember = group.members.find((m) => m.userId === user.id)
+  const isOwner = group.ownerId === user.id
   const tabs = [
     ['expenses', 'المصاريف'],
     ['balances', 'الأرصدة'],
@@ -121,32 +127,67 @@ export default function GroupDetail() {
 
   return (
     <div>
-      <Link to="/" className="text-sm text-slate-500 hover:text-emerald-600">
-        → رجوع للمجموعات
+      <Link to="/" className="text-sm text-inksoft hover:text-pen">
+        → كل الدفاتر
       </Link>
 
-      <div className="card p-5 mt-3 flex items-center gap-4">
-        <div className="flex-1">
-          <h2 className="text-xl font-extrabold">{group.name}</h2>
-          <p className="text-sm text-slate-400">
-            {group.members.length} أعضاء · إجمالي المصاريف {Math.round(total)} ₪
-          </p>
+      <div className="card px-5 py-4 mt-3">
+        <div className="flex items-center gap-3">
+          {editing ? (
+            <form onSubmit={saveName} className="flex-1 flex gap-2">
+              <input
+                value={nameVal}
+                onChange={(e) => setNameVal(e.target.value)}
+                className="input flex-1"
+                autoFocus
+              />
+              <button className="btn-pen text-sm px-4 py-2">حفظ</button>
+              <button
+                type="button"
+                onClick={() => setEditing(false)}
+                className="btn-ghost text-sm px-4 py-2"
+              >
+                إلغاء
+              </button>
+            </form>
+          ) : (
+            <div className="flex-1 flex items-center gap-2 min-w-0">
+              <h2 className="font-display text-2xl font-bold truncate">
+                {group.name}
+              </h2>
+              {isOwner && (
+                <button
+                  onClick={() => {
+                    setNameVal(group.name)
+                    setEditing(true)
+                  }}
+                  title="تغيير اسم الدفتر"
+                  className="text-inksoft hover:text-pen"
+                >
+                  ✎
+                </button>
+              )}
+            </div>
+          )}
+          <div className="flex -space-x-2 rtl:space-x-reverse">
+            {group.members.slice(0, 4).map((m) => (
+              <Avatar key={m.id} name={m.user.name} size="md" />
+            ))}
+          </div>
         </div>
-        <div className="flex -space-x-2 rtl:space-x-reverse">
-          {group.members.slice(0, 4).map((m) => (
-            <Avatar key={m.id} name={m.user.name} size="md" />
-          ))}
-        </div>
+        <p className="text-xs text-inksoft mt-1.5 num">
+          {group.members.length} أعضاء · الإجمالي {Math.round(total)} ₪
+        </p>
       </div>
 
-      <div className="flex flex-wrap gap-2 mt-4">
+      <div className="flex flex-wrap gap-2 mt-3">
         {group.members.map((member) => (
           <span
             key={member.id}
             className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-bold ${
               member.id === myMember?.id
-                ? 'bg-emerald-100 text-emerald-800'
-                : 'bg-white border border-stone-200'
+                ? 'bg-penwash text-pen'
+                : 'bg-white border border-hairline text-inksoft'
             }`}
           >
             {member.user.name}
@@ -160,29 +201,28 @@ export default function GroupDetail() {
           type="email"
           value={inviteEmail}
           onChange={(e) => setInviteEmail(e.target.value)}
-          placeholder="إيميل عضو تدعوه للمجموعة"
+          placeholder="إيميل عضو تدعوه للدفتر"
           required
           className="input flex-1"
           dir="ltr"
         />
-        <button
-          type="submit"
-          className="bg-white border border-stone-300 text-slate-600 font-bold rounded-xl px-4 text-sm hover:border-emerald-400 transition-colors"
-        >
+        <button type="submit" className="btn-ghost text-sm px-4 py-2">
           دعوة
         </button>
       </form>
-      {inviteError && <p className="text-sm text-rose-600 mt-1">{inviteError}</p>}
+      {inviteError && (
+        <p className="text-sm text-debt mt-1">{inviteError}</p>
+      )}
 
-      <div className="flex gap-1.5 mt-6 bg-white border border-stone-200 rounded-2xl p-1.5 w-fit">
+      <div className="flex gap-5 mt-6 border-b border-hairline">
         {tabs.map(([key, label]) => (
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`rounded-xl px-5 py-2 text-sm font-bold transition-colors ${
+            className={`pb-2.5 -mb-px text-sm font-bold border-b-2 transition-colors ${
               tab === key
-                ? 'bg-emerald-600 text-white shadow'
-                : 'text-slate-500 hover:text-slate-700'
+                ? 'border-pen text-pen'
+                : 'border-transparent text-inksoft hover:text-ink'
             }`}
           >
             {label}
@@ -212,11 +252,11 @@ export default function GroupDetail() {
                 min="1"
                 step="0.01"
                 required
-                className="input w-24"
+                className="input w-24 num"
               />
             </div>
             <div className="flex items-center gap-2 flex-wrap text-sm">
-              <span className="text-xs text-slate-400 font-bold">دفع:</span>
+              <span className="text-xs text-inksoft font-bold">دفع:</span>
               <select
                 value={form.payerId}
                 onChange={(e) => setForm({ ...form, payerId: e.target.value })}
@@ -228,7 +268,7 @@ export default function GroupDetail() {
                   </option>
                 ))}
               </select>
-              <span className="text-xs text-slate-400 font-bold mr-2">
+              <span className="text-xs text-inksoft font-bold mr-2">
                 على مين:
               </span>
               {group.members.map((m) => (
@@ -238,87 +278,112 @@ export default function GroupDetail() {
                   onClick={() => toggleSplit(m.id)}
                   className={`rounded-full px-3 py-1 border transition-colors ${
                     splitWith.includes(m.id)
-                      ? 'bg-emerald-600 text-white border-emerald-600'
-                      : 'bg-white text-slate-500 border-stone-200'
+                      ? 'bg-pen text-white border-pen'
+                      : 'bg-white text-inksoft border-hairline hover:border-pen/50'
                   }`}
                 >
                   {m.user.name}
                 </button>
               ))}
             </div>
-            {error && <p className="text-sm text-rose-600">{error}</p>}
+            {error && <p className="text-sm text-debt">{error}</p>}
             <button
               type="submit"
               disabled={splitWith.length === 0}
-              className="btn-primary px-6 text-sm"
+              className="btn-pen px-6 text-sm"
             >
               أضف المصروف
             </button>
           </form>
 
-          <div className="space-y-2.5 mt-5">
-            {expenses.length === 0 && (
-              <div className="card p-8 text-center text-slate-400 text-sm">
-                ما في مصاريف لسا — أول واحد دفع؟ سجلها فوق
+          <div className="mt-5">
+            {expenses.length === 0 ? (
+              <div className="card p-8 text-center text-inksoft text-sm">
+                الدفتر لسا فاضي — أول واحد دفع؟ سجّلها فوق
+              </div>
+            ) : (
+              <div className="card px-5 py-1">
+                {expenses.map((expense) => {
+                  const canDelete =
+                    expense.payerId === myMember?.id || isOwner
+                  return (
+                    <div
+                      key={expense.id}
+                      className="flex items-center gap-3 py-3 border-b border-dashed border-hairline last:border-0"
+                    >
+                      <Avatar name={expense.payer.user.name} size="sm" />
+                      <p className="font-bold truncate max-w-[45%]">
+                        {expense.description}
+                      </p>
+                      <span className="flex-1 border-b border-dotted border-ink/20 -translate-y-1" />
+                      <span className="text-xs text-inksoft whitespace-nowrap hidden sm:inline">
+                        على {expense.splits.length}
+                      </span>
+                      <span className="num font-bold whitespace-nowrap">
+                        {expense.amount} ₪
+                      </span>
+                      {canDelete && (
+                        <button
+                          onClick={() => deleteExpense(expense.id)}
+                          className="text-inksoft/40 hover:text-debt text-lg leading-none"
+                          title="حذف"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+                <div className="flex items-center gap-2 py-3">
+                  <span className="text-xs font-bold text-inksoft">
+                    الإجمالي
+                  </span>
+                  <span className="flex-1 border-b border-dotted border-ink/20 -translate-y-1" />
+                  <span className="num font-bold">{Math.round(total)} ₪</span>
+                </div>
               </div>
             )}
-            {expenses.map((expense) => {
-              const canDelete =
-                expense.payerId === myMember?.id || group.ownerId === user.id
-              return (
-                <div
-                  key={expense.id}
-                  className="card p-4 flex items-center gap-3"
-                >
-                  <Avatar name={expense.payer.user.name} />
-                  <div className="flex-1">
-                    <p className="font-bold">{expense.description}</p>
-                    <p className="text-xs text-slate-400">
-                      دفع {expense.payer.user.name} · على{' '}
-                      {expense.splits.length} أشخاص
-                    </p>
-                  </div>
-                  <span className="font-extrabold text-emerald-700">
-                    {expense.amount} ₪
-                  </span>
-                  {canDelete && (
-                    <button
-                      onClick={() => deleteExpense(expense.id)}
-                      className="text-slate-300 hover:text-rose-600 text-lg leading-none"
-                      title="حذف"
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-              )
-            })}
           </div>
         </>
       )}
 
       {tab === 'balances' && (
-        <div className="grid gap-3 mt-5 sm:grid-cols-2">
+        <div className="card mt-5 overflow-hidden">
+          <div className="grid grid-cols-[1fr_4rem_4rem_6rem] gap-x-3 px-5 py-2.5 bg-penwash text-xs font-bold text-pen">
+            <span>العضو</span>
+            <span className="text-center">دفع</span>
+            <span className="text-center">عليه</span>
+            <span className="text-center">الصافي</span>
+          </div>
           {balances.map((b) => (
-            <div key={b.memberId} className="card p-4 flex items-center gap-3">
-              <Avatar name={b.name} />
-              <div className="flex-1">
-                <p className="font-bold">{b.name}</p>
-                <p className="text-xs text-slate-400">
-                  دفع {b.paid} ₪ · عليه {b.owed} ₪
-                </p>
-              </div>
-              {b.net === 0 ? (
-                <span className="text-sm text-slate-400">متساوي 🎉</span>
-              ) : (
-                <span
-                  className={`font-extrabold ${
-                    b.net > 0 ? 'text-emerald-600' : 'text-rose-600'
-                  }`}
-                >
-                  {b.net > 0 ? `له ${b.net}` : `عليه ${-b.net}`} ₪
-                </span>
-              )}
+            <div
+              key={b.memberId}
+              className="grid grid-cols-[1fr_4rem_4rem_6rem] gap-x-3 px-5 py-3 border-t border-hairline items-center"
+            >
+              <span className="flex items-center gap-2 font-bold text-sm truncate">
+                <Avatar name={b.name} size="sm" />
+                {b.name}
+              </span>
+              <span className="num text-sm text-inksoft text-center">
+                {b.paid}
+              </span>
+              <span className="num text-sm text-inksoft text-center">
+                {b.owed}
+              </span>
+              <span className="text-center">
+                {b.net === 0 ? (
+                  <span className="text-xs text-inksoft">متساوي</span>
+                ) : (
+                  <span
+                    className={`num text-sm font-bold ${
+                      b.net > 0 ? 'text-credit' : 'text-debt'
+                    }`}
+                  >
+                    {b.net > 0 ? 'له ' : 'عليه '}
+                    {Math.abs(b.net)} ₪
+                  </span>
+                )}
+              </span>
             </div>
           ))}
         </div>
@@ -328,25 +393,30 @@ export default function GroupDetail() {
         <div className="mt-5 space-y-3">
           {settlements.length === 0 ? (
             <div className="card p-10 text-center">
-              <div className="text-4xl mb-2">🎉</div>
-              <p className="font-bold">كل الحسابات متساوية</p>
+              <p className="font-display font-bold text-lg">
+                كل الحسابات متساوية
+              </p>
+              <p className="text-sm text-inksoft mt-1">
+                ما حد عليه شي — قسّمها صح من أول مرة
+              </p>
             </div>
           ) : (
             <>
-              <p className="text-sm text-slate-500">
-                خطة التسوية — أقل عدد تحويلات ممكن ({settlements.length}):
+              <p className="text-sm text-inksoft">
+                أقل عدد تحويلات ممكن — {settlements.length} تحويل وخلص:
               </p>
               {settlements.map((t, i) => (
                 <div key={i} className="card p-4 flex items-center gap-3">
                   <Avatar name={t.fromName} />
-                  <div className="flex-1 text-center">
-                    <p className="font-bold text-rose-600">{t.fromName}</p>
-                    <p className="text-xs text-slate-400">يدفع لـ ↓</p>
+                  <div className="flex-1 min-w-0 text-sm">
+                    <span className="font-bold text-debt">{t.fromName}</span>
+                    <span className="text-inksoft"> يدفع لـ </span>
+                    <span className="font-bold">{t.toName}</span>
                   </div>
-                  <Avatar name={t.toName} />
-                  <span className="bg-emerald-100 text-emerald-800 font-extrabold rounded-full px-4 py-1.5">
+                  <span className="num font-bold bg-penwash text-pen rounded-full px-4 py-1.5">
                     {t.amount} ₪
                   </span>
+                  <Avatar name={t.toName} />
                 </div>
               ))}
             </>
