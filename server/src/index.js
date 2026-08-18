@@ -4,6 +4,7 @@ import dotenv from 'dotenv'
 import authRoutes from './routes/auth.js'
 import groupRoutes from './routes/groups.js'
 import memberRoutes from './routes/members.js'
+import expenseRoutes from './routes/expenses.js'
 
 dotenv.config()
 
@@ -20,6 +21,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes)
 app.use('/api/groups', groupRoutes)
 app.use('/api/groups/:id/members', memberRoutes)
+app.use('/api/groups/:id/expenses', expenseRoutes)
 
 app.use((req, res) => {
   res.status(404).json({ error: 'not found' })
