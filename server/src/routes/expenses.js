@@ -81,6 +81,57 @@ router.get('/', async (req, res) => {
   res.json(expenses)
 })
 
+router.patch('/:expenseId', async (req, res) => {
+  const { payerId, amount, description, splitWith } = req.body
+  const group = await loadGroup(req.params.id)
+  if (!group) {
+    return res.status(404).json({ error: 'group not found' })
+  }
+  const me = group.members.find((m) => m.userId === req.user.id)
+  if (!me) {
+    return res.status(403).json({ error: 'you are not a member of this group' })
+  }
+
+  const expense = await prisma.expense.findFirst({
+    where: { id: req.params.expenseId, groupId: group.id },
+  })
+  if (!expense) {
+    return res.status(404).json({ error: 'expense not found' })
+  }
+  if (expense.payerId !== me.id && req.user.id !== group.ownerId) {
+    return res.status(403).json({ error: 'only the payer or the owner can edit an expense' })
+  }
+
+  if (!description || !description.trim()) {
+    return res.status(400).json({ error: 'description is required' })
+  }
+  if (!amount || amount <= 0) {
+    return res.status(400).json({ error: 'amount must be a positive number' })
+  }
+  if (!group.members.some((m) => m.id === payerId)) {
+    return res.status(400).json({ error: 'payer is not a member of this group' })
+  }
+
+  let splitMemberIds = Array.isArray(splitWith) && splitWith.length > 0
+    ? splitWith
+    : group.members.map((m) => m.id)
+  if (!splitMemberIds.every((id) => group.members.some((m) => m.id === id))) {
+    return res.status(400).json({ error: 'split members must belong to the group' })
+  }
+
+  const updated = await prisma.expense.update({
+    where: { id: expense.id },
+    data: {
+      payerId,
+      amount,
+      description: description.trim(),
+      splits: { deleteMany: {}, create: splitMemberIds.map((memberId) => ({ memberId })) },
+    },
+    include: expenseInclude,
+  })
+  res.json(updated)
+})
+
 router.delete('/:expenseId', async (req, res) => {
   const group = await loadGroup(req.params.id)
   if (!group) {

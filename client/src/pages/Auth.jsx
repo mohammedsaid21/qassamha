@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import api from '../api'
 import { useAuth } from '../AuthContext'
 import { useLang, useApiError } from '../i18n'
+import { DEMO_EMAIL, DEMO_PASSWORD } from '../demo'
+
+const loginDefaults = { name: '', email: DEMO_EMAIL, password: DEMO_PASSWORD }
 
 export default function Auth() {
   const [mode, setMode] = useState('login')
-  const [form, setForm] = useState({ name: '', email: '', password: '' })
+  const [form, setForm] = useState(loginDefaults)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const { login } = useAuth()
@@ -69,7 +72,7 @@ export default function Auth() {
               onChange={change}
               required
               className="input w-full"
-              placeholder="you@example.com"
+              placeholder={t('demoEmail')}
               dir="ltr"
             />
           </div>
@@ -82,7 +85,7 @@ export default function Auth() {
               onChange={change}
               required
               className="input w-full"
-              placeholder={t('passwordPlaceholder')}
+              placeholder={mode === 'login' ? t('demoPassword') : t('passwordPlaceholder')}
               dir="ltr"
             />
           </div>
@@ -105,8 +108,10 @@ export default function Auth() {
         <button
           type="button"
           onClick={() => {
-            setMode(mode === 'login' ? 'register' : 'login')
+            const next = mode === 'login' ? 'register' : 'login'
+            setMode(next)
             setError('')
+            setForm(next === 'login' ? loginDefaults : { name: '', email: '', password: '' })
           }}
           className="w-full mt-5 text-sm text-pen font-bold hover:underline"
         >
@@ -117,7 +122,9 @@ export default function Auth() {
       {mode === 'login' && (
         <p className="text-center text-xs text-inksoft mt-4 leading-relaxed">
           {t('demoHint')}{' '}
-          <span className="num" dir="ltr">demo@qassamha.app / Demo1234!</span>
+          <span className="num" dir="ltr">
+            {t('demoEmail')} / {t('demoPassword')}
+          </span>
         </p>
       )}
     </div>

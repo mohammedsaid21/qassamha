@@ -54,6 +54,12 @@ button:not(:disabled) {
       px-4 py-2.5 hover:border-pen hover:text-pen transition-colors
       focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pen;
   }
+  .btn-icon {
+    @apply w-8 h-8 rounded-lg border border-hairline bg-white
+      flex items-center justify-center text-sm font-bold leading-none
+      hover:border-pen/40 hover:bg-penwash transition-colors
+      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pen;
+  }
 }
 
 @keyframes cut {

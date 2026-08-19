@@ -56,6 +56,7 @@ const serverErrors = {
   'description is required': 'errDescriptionRequired',
   'amount must be a positive number': 'errAmountPositive',
   'only the payer or the owner can delete an expense': 'errOnlyOwnerDelete',
+  'only the payer or the owner can edit an expense': 'errOnlyOwnerEdit',
   'member email is required': 'errMemberEmailRequired',
   'no user with this email': 'errNoUser',
   'already a member': 'errAlreadyMember',

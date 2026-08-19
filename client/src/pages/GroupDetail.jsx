@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import api from '../api'
 import { useAuth } from '../AuthContext'
@@ -23,6 +23,8 @@ export default function GroupDetail() {
   const [tab, setTab] = useState('expenses')
   const [editing, setEditing] = useState(false)
   const [nameVal, setNameVal] = useState('')
+  const [editingId, setEditingId] = useState(null)
+  const formRef = useRef(null)
 
   function refresh() {
     api.get(`/groups/${id}/expenses`).then((res) => setExpenses(res.data))
@@ -79,27 +81,64 @@ export default function GroupDetail() {
   }
 
   async function deleteExpense(expenseId) {
+    if (!window.confirm(t('deleteConfirm'))) return
     try {
       await api.delete(`/groups/${id}/expenses/${expenseId}`)
-      setExpenses(expenses.filter((e) => e.id !== expenseId))
+      if (editingId === expenseId) clearForm()
+      setExpenses((prev) => prev.filter((e) => e.id !== expenseId))
       refresh()
     } catch (err) {
       setError(err.response?.data?.error)
     }
   }
 
-  async function addExpense(e) {
+  function startEdit(expense) {
+    setTab('expenses')
+    setEditingId(expense.id)
+    setForm({
+      description: expense.description,
+      amount: String(expense.amount),
+      payerId: expense.payerId,
+    })
+    setSplitWith(expense.splits.map((s) => s.member.id))
+    setError('')
+    requestAnimationFrame(() => {
+      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    })
+  }
+
+  function clearForm() {
+    setEditingId(null)
+    setForm((f) => ({
+      ...f,
+      description: '',
+      amount: '',
+      payerId: group.members.find((m) => m.userId === user.id)?.id || f.payerId,
+    }))
+    setSplitWith(group.members.map((m) => m.id))
+  }
+
+  async function submitExpense(e) {
     e.preventDefault()
     setError('')
+    const payload = {
+      description: form.description,
+      amount: Number(form.amount),
+      payerId: form.payerId,
+      splitWith,
+    }
     try {
-      const { data } = await api.post(`/groups/${id}/expenses`, {
-        description: form.description,
-        amount: Number(form.amount),
-        payerId: form.payerId,
-        splitWith,
-      })
-      setExpenses([data, ...expenses])
-      setForm({ ...form, description: '', amount: '' })
+      if (editingId) {
+        const { data } = await api.patch(
+          `/groups/${id}/expenses/${editingId}`,
+          payload,
+        )
+        setExpenses(expenses.map((x) => (x.id === data.id ? data : x)))
+      } else {
+        const { data } = await api.post(`/groups/${id}/expenses`, payload)
+        setExpenses([data, ...expenses])
+      }
+      clearForm()
       refresh()
     } catch (err) {
       setError(err.response?.data?.error)
@@ -235,7 +274,25 @@ export default function GroupDetail() {
 
       {tab === 'expenses' && (
         <>
-          <form onSubmit={addExpense} className="card p-4 mt-5 space-y-3">
+          <form
+            ref={formRef}
+            onSubmit={submitExpense}
+            className={`card p-4 mt-5 space-y-3 transition-shadow ${
+              editingId ? 'ring-2 ring-pen/25 border-pen/30' : ''
+            }`}
+          >
+            {editingId && (
+              <div className="flex items-center justify-between gap-2 rounded-lg bg-penwash px-3 py-2 text-sm">
+                <span className="font-bold text-pen">{t('editingExpense')}</span>
+                <button
+                  type="button"
+                  onClick={clearForm}
+                  className="text-xs text-inksoft hover:text-pen font-bold"
+                >
+                  {t('cancel')}
+                </button>
+              </div>
+            )}
             <div className="flex gap-2">
               <input
                 type="text"
@@ -290,13 +347,24 @@ export default function GroupDetail() {
               ))}
             </div>
             {error && <p className="text-sm text-debt">{apiError(error)}</p>}
-            <button
-              type="submit"
-              disabled={splitWith.length === 0}
-              className="btn-pen px-6 text-sm"
-            >
-              {t('addExpenseBtn')}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="submit"
+                disabled={splitWith.length === 0}
+                className="btn-pen px-6 text-sm"
+              >
+                {editingId ? t('saveChanges') : t('addExpenseBtn')}
+              </button>
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={clearForm}
+                  className="btn-ghost text-sm px-4 py-2.5"
+                >
+                  {t('cancel')}
+                </button>
+              )}
+            </div>
           </form>
 
           <div className="mt-5">
@@ -307,12 +375,14 @@ export default function GroupDetail() {
             ) : (
               <div className="card px-5 py-1">
                 {expenses.map((expense) => {
-                  const canDelete =
+                  const canModify =
                     expense.payerId === myMember?.id || isOwner
                   return (
                     <div
                       key={expense.id}
-                      className="flex items-center gap-3 py-3 border-b border-dashed border-hairline last:border-0"
+                      className={`flex items-center gap-3 py-3 border-b border-dashed border-hairline last:border-0 -mx-2 px-2 rounded-lg transition-colors ${
+                        editingId === expense.id ? 'bg-penwash/70' : ''
+                      }`}
                     >
                       <Avatar name={expense.payer.user.name} size="sm" />
                       <p className="font-bold truncate max-w-[45%]">
@@ -325,14 +395,27 @@ export default function GroupDetail() {
                       <span className="num font-bold whitespace-nowrap">
                         {expense.amount} ₪
                       </span>
-                      {canDelete && (
-                        <button
-                          onClick={() => deleteExpense(expense.id)}
-                          className="text-inksoft/40 hover:text-debt text-lg leading-none"
-                          title={t('delete')}
-                        >
-                          ×
-                        </button>
+                      {canModify && (
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => startEdit(expense)}
+                            className="btn-icon text-pen"
+                            title={t('edit')}
+                            aria-label={t('edit')}
+                          >
+                            ✎
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => deleteExpense(expense.id)}
+                            className="btn-icon text-debt"
+                            title={t('delete')}
+                            aria-label={t('delete')}
+                          >
+                            ×
+                          </button>
+                        </div>
                       )}
                     </div>
                   )
