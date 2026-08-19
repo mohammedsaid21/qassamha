@@ -1,22 +1,10 @@
 # Qassamha (قسّمها)
 
-Split group expenses with friends — who paid what, who owes who, and the simplest way to settle up.
-
-Built as a Chingu Solo Project (Tier 3).
-
-## Live app
-
-https://qassamha.vercel.app
-
-**Demo login:** `demo@qassamha.app` / `Demo1234!`
-
-The demo account has a few groups and expenses already loaded so you can jump straight to balances and settlements.
-
 ## Overview
 
-When a group shares costs — trips, rent, dinners — it gets messy fast. Qassamha keeps a shared ledger per group: add expenses, split them between members, see running balances, and get a minimal list of who should pay whom to clear everything.
+When a group shares costs — trips, rent, dinners — it gets messy fast. I built Qassamha as a **Chingu Solo Project (Tier 3)** to solve that: a shared ledger per group where you track who paid what, who owes who, and the simplest way to settle up.
 
-The UI is Arabic-first with an English toggle. RTL layout throughout.
+The UI is Arabic-first with an English toggle and RTL layout throughout.
 
 ## Features
 
@@ -27,14 +15,26 @@ The UI is Arabic-first with an English toggle. RTL layout throughout.
 - Settlement plan using a greedy min-transfers algorithm
 - Arabic and English UI
 
-## Running locally
+## Running the project
 
-You need Node 18+ and a Postgres database (I used [Neon](https://neon.tech)).
+**Live app:** https://qassamha.vercel.app
 
-### 1. Server
+**Demo login:** `demo@qassamha.app` / `Demo1234!`
+
+The demo account has a few groups and expenses already loaded so you can jump straight to balances and settlements.
+
+### Prerequisites
+
+- Node.js 18+
+- PostgreSQL database ([Neon](https://neon.tech) works well)
+
+### Local setup
+
+Clone the repo and set up the server:
 
 ```bash
-cd server
+git clone https://github.com/mohammedsaid21/qassamha.git
+cd qassamha/server
 npm install
 cp .env.example .env
 ```
@@ -55,11 +55,9 @@ npm run seed
 npm run dev
 ```
 
-API runs at `http://localhost:4000`.
+The API runs at `http://localhost:4000`.
 
-### 2. Client
-
-In a second terminal:
+In a second terminal, start the client:
 
 ```bash
 cd client
@@ -73,17 +71,10 @@ Open `http://localhost:5173`. In dev the client talks to `http://localhost:4000/
 
 The repo is set up for Vercel (client + API in one project). Set `DATABASE_URL` and `JWT_SECRET` in the Vercel environment variables.
 
-## Repo structure
-
-```
-client/   React + Vite + Tailwind frontend
-server/   Express + Prisma API
-api/      Vercel serverless entry point
-```
-
 ## Dependencies
 
 **Frontend**
+
 - [React](https://react.dev/)
 - [Vite](https://vite.dev/)
 - [Tailwind CSS](https://tailwindcss.com/)
@@ -91,23 +82,33 @@ api/      Vercel serverless entry point
 - [Axios](https://axios-http.com/)
 
 **Backend**
+
 - [Express](https://expressjs.com/)
 - [Prisma](https://www.prisma.io/) + PostgreSQL
 - [jsonwebtoken](https://github.com/auth0/node-jsonwebtoken) + [bcryptjs](https://github.com/dcodeIO/bcrypt.js)
 
-## API endpoints
+## ToDo
 
-```
-POST   /api/auth/register
-POST   /api/auth/login
-GET    /api/auth/me
-POST   /api/groups
-GET    /api/groups
-GET    /api/groups/:id
-POST   /api/groups/:id/members
-DELETE /api/groups/:id/members/:memberId
-POST   /api/groups/:id/expenses
-DELETE /api/expenses/:id
-GET    /api/groups/:id/balances
-GET    /api/groups/:id/settlements
-```
+- [ ] Custom split ratios (currently splits are equal)
+- [ ] Expense categories and filters
+- [ ] Export group balances as CSV
+- [ ] Email notifications when invited to a group
+
+## Contributors
+
+- [mohammedsaid21](https://github.com/mohammedsaid21) — solo project
+
+## Ways to contribute
+
+1. Fork the repo
+2. Create a branch (`git checkout -b feature/your-feature`)
+3. Commit your changes
+4. Open a pull request against `main`
+
+Bug reports and feature ideas are welcome via [GitHub Issues](https://github.com/mohammedsaid21/qassamha/issues).
+
+## Visuals
+
+Login page (Arabic UI):
+
+![Qassamha login page — Arabic-first expense-splitting app](docs/screenshot-home.png)
